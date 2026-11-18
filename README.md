@@ -9,6 +9,7 @@ This repository owns the observability-specific Helm/Kustomize configuration, se
 - [Deploy Genestack Observability on an Overseer](docs/genestack-observability-deployment.md)
 - [Alerting and Recording Rules](docs/genestack-observability-alerts-and-rules.md)
 - [F5 BIG-IP HA Monitoring](docs/f5-bigip-ha-monitoring.md)
+- [Server Hardware Monitoring](docs/server-hardware-monitoring.md) (design proposal)
 - [Genestack documentation](https://docs.rackspacecloud.com/)
 - [Genestack repository](https://github.com/rackerlabs/genestack)
 
