@@ -1,0 +1,37 @@
+additionalPrometheusRulesMap:
+  node-bonding-insufficient-slaves:
+    groups:
+      - name: node-bonding-insufficient-slaves
+        rules:
+          - alert: node-bonding-insufficient-slaves-warning
+            expr: node_bonding_slaves < 2
+            for: 5m
+            labels:
+              severity: warning
+              group_name: node-bonding-insufficient-slaves
+              node_hostname: '{{ $labels.k8s_node_name }}'
+            annotations:
+              description: >-
+                Bonding interface {{ $labels.master }} on {{ $labels.instance }} has only {{ $value }}
+                configured slave interface, so it provides no link redundancy and node-bonding-degraded
+                cannot detect a failure on it. Either a slave was never enslaved or one was removed rather
+                than failing. This warning alert fires after 5m.
+              runbook_url: default_runbook_url
+              summary: Bonding interface has fewer than two slaves.
+              dashboard_url: default_dashboard_url
+          - alert: node-bonding-insufficient-slaves-critical
+            expr: node_bonding_slaves < 2
+            for: 10m
+            labels:
+              severity: critical
+              group_name: node-bonding-insufficient-slaves
+              node_hostname: '{{ $labels.k8s_node_name }}'
+            annotations:
+              description: >-
+                Bonding interface {{ $labels.master }} on {{ $labels.instance }} has only {{ $value }}
+                configured slave interface. The bond is a single point of failure for this host's
+                connectivity and any further link loss isolates the node. This critical alert fires after
+                10m.
+              runbook_url: default_runbook_url
+              summary: Bonding interface has fewer than two slaves.
+              dashboard_url: default_dashboard_url

@@ -1,0 +1,39 @@
+additionalPrometheusRulesMap:
+  node-disk-io-saturation:
+    groups:
+      - name: node-disk-io-saturation
+        rules:
+          - alert: node-disk-io-saturation-warning
+            expr: >-
+              instance_device:node_disk_io_time_seconds:rate5m > 0.9
+            for: 15m
+            labels:
+              severity: warning
+              group_name: node-disk-io-saturation
+              node_hostname: '{{ $labels.k8s_node_name }}'
+            annotations:
+              description: >-
+                Device {{ $labels.device }} at {{ $labels.instance }} has spent {{ $value | humanizePercentage }} of
+                the last 5m servicing IO, sustained for 15m. The device is at or near its
+                throughput limit and IO latency is likely elevated. A device can legitimately sit near 100%
+                under sequential bulk work, so confirm the workload before treating this as a fault.
+              runbook_url: default_runbook_url
+              summary: Disk IO is saturated.
+              dashboard_url: default_dashboard_url
+          - alert: node-disk-io-saturation-critical
+            expr: >-
+              instance_device:node_disk_io_time_seconds:rate5m > 0.9
+            for: 1h
+            labels:
+              severity: critical
+              group_name: node-disk-io-saturation
+              node_hostname: '{{ $labels.k8s_node_name }}'
+            annotations:
+              description: >-
+                Device {{ $labels.device }} at {{ $labels.instance }} has been saturated for 1h at {{ $value |
+                humanizePercentage }} IO time. Sustained saturation this long is rarely normal
+                workload; expect guest IO stalls on this host and check for a failing device, a rebuilding
+                array, or a runaway writer.
+              runbook_url: default_runbook_url
+              summary: Disk IO has been saturated for an hour.
+              dashboard_url: default_dashboard_url
