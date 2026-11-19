@@ -230,6 +230,53 @@ The `kube-prometheus-stack` installer should no longer:
 - append generated rule files with additional `-f` arguments;
 - own custom Genestack alerting or recording rules.
 
+## Validating rules
+
+Rule files wrap their groups in `additionalPrometheusRulesMap`, which `promtool`
+cannot load. `scripts/render-prometheus-rules.py` strips the wrapper and writes
+the plain `groups:` document that `promtool` expects. Rendered output belongs in
+`tests/.rendered/`, which is ignored by Git.
+
+Check that every rule parses, that each expression is valid PromQL, and that
+each annotation template compiles:
+
+```bash
+python3 scripts/render-prometheus-rules.py \
+  alerts/prometheus-alerts alerts/recording \
+  -o tests/.rendered/all.yaml
+
+promtool check rules tests/.rendered/all.yaml
+```
+
+This is the baseline gate for any rule change. It catches the mistakes that
+reading a diff does not, most usefully template functions that exist in Helm but
+not in Prometheus: `mulf` and the rest of Sprig are unavailable, and
+`humanizePercentage`, `humanizeDuration`, and `printf` are the supported way to
+format a value.
+
+## Rule unit tests
+
+Unit tests live in `tests/` as `<rule-name>.test.yaml` and run under
+`promtool test rules`, with `rule_files` pointing at a rendered rule file:
+
+```bash
+python3 scripts/render-prometheus-rules.py \
+  alerts/prometheus-alerts/f5/f5-bigip-ha.yaml \
+  -o tests/.rendered/f5-bigip-ha.yaml
+
+promtool test rules tests/f5-bigip-ha.test.yaml
+```
+
+Reserve unit tests for rules whose behavior cannot be read off the expression:
+aggregation across instances, `absent()` and other absence logic, label joins,
+or interacting thresholds. A single-threshold alert with a `for` duration does
+not need one; `promtool check rules` already covers it, and a test that restates
+the threshold only adds maintenance when wording changes.
+
+A test file whose `rule_files` list is empty loads no rules. It reports
+`SUCCESS` for any expectation of no alerts and fails every expectation of a
+firing alert, so an empty list is never correct.
+
 ---
 
 # Loki rules

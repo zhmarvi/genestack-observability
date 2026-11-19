@@ -145,3 +145,6 @@ site/
 AGENTS.md
 .mcp*
 .claude
+
+# Rendered Prometheus rule files for promtool unit tests
+tests/.rendered/
